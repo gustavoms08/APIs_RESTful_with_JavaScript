@@ -7,6 +7,8 @@ const { cardapio } = require('../services/database');
 // Quando o cliente pede para ver o menu, essa função é executada
 const getCardapio = (req, res) => {
   try {
+
+    console.log("Veio buscar o cardápio")
     // Retorna o array do cardápio com status 200 (OK)
     res.status(200).json({
       sucesso: true,

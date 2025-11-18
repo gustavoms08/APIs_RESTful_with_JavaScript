@@ -148,5 +148,5 @@ module.exports = {
   getComandas,
   createComanda,
   updateComandaStatus,
-  deleteComanda // <-- Nova função adicionada
+  deleteComanda 
 };

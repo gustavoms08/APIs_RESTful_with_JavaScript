@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getComandas, updateComandaStatus } from '../services/api';
+import { getComandas, updateComandaStatus, deleteComanda } from '../services/api';
 
 // Componente que exibe todos os pedidos feitos (Painel da Cozinha)
 // Recebe a prop 'refreshTrigger' para saber quando atualizar a lista
@@ -52,6 +52,32 @@ export function PainelCozinha({ refreshTrigger }) {
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
       alert('Falha ao atualizar o status do pedido.');
+    }
+  };
+
+  // Função para cancelar (deletar) um pedido
+  const handleCancelarPedido = async (id) => {
+    // Pede confirmação ao usuário antes de deletar
+    const confirmacao = window.confirm('Tem certeza que deseja cancelar este pedido?');
+    
+    if (!confirmacao) {
+      return; // Se o usuário cancelar, não faz nada
+    }
+
+    try {
+      // 1. Chama a API para deletar no back-end
+      await deleteComanda(id);
+      
+      // 2. Remove o pedido do estado local (UI)
+      setComandas((comandasAnteriores) =>
+        comandasAnteriores.filter((c) => c.id !== id)
+      );
+      
+      console.log(`Pedido #${id} cancelado com sucesso!`);
+    
+    } catch (err) {
+      console.error('Erro ao cancelar pedido:', err);
+      alert('Falha ao cancelar o pedido.');
     }
   };
 
@@ -131,6 +157,16 @@ export function PainelCozinha({ refreshTrigger }) {
                 {/* Mensagem de Concluído (só aparece se status for "Concluído") */}
                 {comanda.status === 'Concluído' && (
                   <p className="status-concluido-msg">Pedido Finalizado!</p>
+                )}
+                
+                {/* Botão "Cancelar Pedido" (só aparece se status NÃO for "Concluído") */}
+                {comanda.status !== 'Concluído' && (
+                  <button 
+                    className="btn-cancelar"
+                    onClick={() => handleCancelarPedido(comanda.id)}
+                  >
+                    🗑️ Cancelar Pedido
+                  </button>
                 )}
               </div>
               {/* --- FIM DOS BOTÕES --- */}
