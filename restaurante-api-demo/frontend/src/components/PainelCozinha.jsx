@@ -58,11 +58,11 @@ export function PainelCozinha({ refreshTrigger }) {
   // Função para cancelar (deletar) um pedido
   const handleCancelarPedido = async (id) => {
     // Pede confirmação ao usuário antes de deletar
-    // const confirmacao = window.confirm('Tem certeza que deseja cancelar este pedido?');
+    const confirmacao = window.confirm('Tem certeza que deseja cancelar este pedido?');
     
-    // if (!confirmacao) {
-    //   return; // Se o usuário cancelar, não faz nada
-    // }
+    if (!confirmacao) {
+    return; // Se o usuário cancelar, não faz nada
+     }
 
     try {
       // 1. Chama a API para deletar no back-end

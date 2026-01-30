@@ -36,7 +36,7 @@ const createComanda = (req, res) => {
       mesa,
       itens,
       total,
-      status: 'concluido',
+      status: 'PREPARANDO',
       dataPedido: new Date().toISOString()
     };
 
