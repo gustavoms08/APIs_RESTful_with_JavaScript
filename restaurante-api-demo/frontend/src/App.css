@@ -205,6 +205,81 @@ body {
   margin-top: 0.5em;
 }
 
+/* --- Estilos do Controle de Quantidade no Cardápio --- */
+.controle-quantidade-cardapio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 15px;
+  padding: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.quantidade-numero {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  min-width: 30px;
+  text-align: center;
+}
+
+.btn-quantidade {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 28px;
+  font-weight: 300;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.btn-quantidade:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.btn-quantidade:active {
+  transform: scale(0.9);
+}
+
+.btn-quantidade:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.btn-adicionar-pedido {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 1em;
+  font-size: 0.95em;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  width: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.btn-adicionar-pedido:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-adicionar-pedido:active {
+  transform: scale(0.98);
+}
+
 /* Estados de Loading e Erro */
 .loading {
   font-size: 1.5em;
@@ -234,32 +309,6 @@ body {
 .error p {
   margin: 0.5em 0;
   font-size: 1.1em;
-}
-
-/* --- Estilos dos Botões do Cardápio --- */
-.cardapio-item button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 20px;
-  border-radius: 10px;
-  cursor: pointer;
-  margin-top: 1em;
-  font-size: 0.95em;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  width: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
-}
-
-.cardapio-item button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
-}
-
-.cardapio-item button:active {
-  transform: scale(0.98);
 }
 
 /* --- Estilos da Seção de Comanda --- */
@@ -331,20 +380,51 @@ body {
   margin-bottom: 0;
 }
 
+.comanda-item-info {
+  flex-grow: 1;
+  text-align: left;
+}
+
 .comanda-item-nome {
   font-weight: 500;
   color: #333;
-  flex-grow: 1;
-  text-align: left;
+  display: block;
+  margin-bottom: 4px;
 }
 
 .comanda-item-preco {
   font-weight: bold;
   color: #667eea;
-  margin: 0 15px;
 }
 
-.comanda-item button {
+.preco-unitario {
+  font-size: 12px;
+  color: #666;
+  font-weight: normal;
+  margin-left: 5px;
+}
+
+/* --- Estilos do Controle de Quantidade na Comanda --- */
+.controle-quantidade-comanda {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 20px;
+}
+
+.controle-quantidade-comanda .btn-quantidade {
+  font-size: 24px;
+  color: #333;
+}
+
+.controle-quantidade-comanda .quantidade-numero {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  min-width: 25px;
+}
+
+.btn-remover-item {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
   color: white;
   border: none;
@@ -357,14 +437,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
-.comanda-item button:hover {
+.btn-remover-item:hover {
   background: linear-gradient(135deg, #ee5a5a 0%, #e74c3c 100%);
   transform: scale(1.1);
 }
 
-.comanda-item button:active {
+.btn-remover-item:active {
   transform: scale(0.95);
 }
 
@@ -452,6 +533,26 @@ body {
 
   .input-pesquisa {
     width: 100%;
+  }
+
+  .comanda-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .comanda-item-info {
+    width: 100%;
+  }
+
+  .controle-quantidade-comanda {
+    margin: 10px 0;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .btn-remover-item {
+    align-self: flex-end;
   }
 }
 
@@ -765,4 +866,42 @@ body {
     right: 6px;
     font-size: 20px;
   }
+}
+
+/* --- Estilos Específicos para Controle de Quantidade no Cardápio (OPCIONAL) --- */
+.cardapio-item .controle-quantidade-cardapio {
+  border-top: 1px solid #eaeaea;
+  padding-top: 15px;
+  margin-top: 10px;
+}
+
+/* Se quiser um visual ainda mais "solto" */
+.btn-quantidade-solto {
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 32px;
+  font-weight: 200;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.btn-quantidade-solto:hover {
+  color: #667eea;
+}
+
+.btn-quantidade-solto:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.quantidade-numero-solto {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 15px;
+  min-width: 40px;
+  text-align: center;
 }

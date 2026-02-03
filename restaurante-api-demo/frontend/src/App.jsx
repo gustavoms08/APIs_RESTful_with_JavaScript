@@ -1,121 +1,151 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getCardapio, createComanda } from './services/api'; // Importa nossas funções da API
-import { PainelCozinha } from './components/PainelCozinha'; // Importa o Painel da Cozinha
-import './App.css'; // Vite inclui este CSS básico
+import { getCardapio, createComanda } from './services/api';
+import { PainelCozinha } from './components/PainelCozinha';
+import './App.css';
 
 function App() {
-  // Estado para guardar os itens do cardápio
   const [cardapio, setCardapio] = useState([]);
-  // Estado para gerenciar o status de carregamento
   const [loading, setLoading] = useState(true);
-  // Estado para erros
   const [error, setError] = useState(null);
-  // Estado para a comanda (carrinho de pedidos)
   const [comanda, setComanda] = useState([]);
-  // Estado para a barra de pesquisa
   const [termoBusca, setTermoBusca] = useState('');
-  
-  const [numeromesa, setnumeromesa] = useState(1);
-
-  // Estado para controlar atualização do Painel da Cozinha (gatilho)
+  const [numeromesa, setNumeromesa] = useState(1);
   const [refreshPedidos, setRefreshPedidos] = useState(0);
 
-  // useEffect: Roda quando o componente "monta" (inicia)
   useEffect(() => {
-    // Função interna para "chamar o garçom"
     const fetchCardapio = async () => {
       try {
         const response = await getCardapio();
         console.log('✅ Front-end: "Cardápio recebido!"', response.data);
         
-        // A resposta da API vem em response.data.dados (conforme nosso back-end)
         if (response.data.dados) {
           setCardapio(response.data.dados);
         } else {
-          setCardapio(response.data); // Fallback caso a estrutura seja diferente
+          setCardapio(response.data);
         }
       } catch (err) {
         console.error('X Front-end: "Erro ao buscar o cardápio"', err);
-        setError(err); // Guarda o erro no estado
+        setError(err);
       } finally {
-        setLoading(false); // Para de carregar (com sucesso ou erro)
+        setLoading(false);
       }
     };
 
-    fetchCardapio(); // Chama a função
-  }, []); // O array vazio [] significa que este efeito roda APENAS UMA VEZ
+    fetchCardapio();
+  }, []);
 
-  // Função para filtrar o cardápio baseado no termo de busca
   const cardapioFiltrado = useMemo(() => {
     if (!termoBusca.trim()) {
-      return cardapio; // Retorna todos os itens se não houver busca
+      return cardapio;
     }
     
     const termoLower = termoBusca.toLowerCase();
     return cardapio.filter(item => {
-      // Busca pelo nome OU descrição
       return item.nome.toLowerCase().includes(termoLower) ||
              item.descricao.toLowerCase().includes(termoLower);
     });
   }, [cardapio, termoBusca]);
 
-  // Função para limpar a busca
   const handleLimparBusca = () => {
     setTermoBusca('');
   };
 
-  // Função para adicionar um item ao carrinho (comanda)
+  // Função para adicionar um item ao carrinho com quantidade
   const handleAddItemComanda = (item) => {
     setComanda((prevComanda) => {
-      console.log('✅ Item adicionado à comanda:', item.nome);
-      // Adiciona o item novo à lista de itens anteriores
-      return [...prevComanda, item];
+      // Verifica se o item já existe na comanda
+      const itemExistenteIndex = prevComanda.findIndex(comandaItem => 
+        comandaItem.id === item.id
+      );
+      
+      if (itemExistenteIndex !== -1) {
+        // Se existe, aumenta a quantidade
+        const novaComanda = [...prevComanda];
+        novaComanda[itemExistenteIndex] = {
+          ...novaComanda[itemExistenteIndex],
+          quantidade: novaComanda[itemExistenteIndex].quantidade + 1
+        };
+        return novaComanda;
+      } else {
+        // Se não existe, adiciona com quantidade 1
+        console.log('✅ Item adicionado à comanda:', item.nome);
+        return [...prevComanda, { ...item, quantidade: 1 }];
+      }
     });
   };
 
-  // ✅ NOVA FUNÇÃO: remover item da comanda pelo índice
+  // Função para remover item da comanda
   const handleRemoveItemComanda = (indexToRemove) => {
     setComanda((prevComanda) => {
       return prevComanda.filter((_, index) => index !== indexToRemove);
     });
   };
 
-  // Função para calcular o total da comanda
+  // Função para diminuir a quantidade de um item na comanda
+  const handleDiminuirQuantidade = (index) => {
+    setComanda((prevComanda) => {
+      const novaComanda = [...prevComanda];
+      if (novaComanda[index].quantidade > 1) {
+        // Diminui a quantidade se for maior que 1
+        novaComanda[index] = {
+          ...novaComanda[index],
+          quantidade: novaComanda[index].quantidade - 1
+        };
+      } else {
+        // Remove o item se a quantidade for 1
+        novaComanda.splice(index, 1);
+      }
+      return novaComanda;
+    });
+  };
+
+  // Função para aumentar a quantidade de um item na comanda
+  const handleAumentarQuantidade = (index) => {
+    setComanda((prevComanda) => {
+      const novaComanda = [...prevComanda];
+      novaComanda[index] = {
+        ...novaComanda[index],
+        quantidade: novaComanda[index].quantidade + 1
+      };
+      return novaComanda;
+    });
+  };
+
+  // Função para calcular o total da comanda considerando quantidade
   const calcularTotalComanda = () => {
-    return comanda.reduce((total, item) => total + item.preco, 0);
+    return comanda.reduce((total, item) => total + (item.preco * item.quantidade), 0);
   };
 
   // Função para ENVIAR o pedido para o back-end
   const handleFazerPedido = async () => {
-     if (comanda.length === 0) {
+    if (comanda.length === 0) {
       alert('Sua comanda está vazia!');
       return;
-     }
+    }
+
+    // Prepara os itens com quantidade para o back-end
+    const itensComQuantidade = comanda.flatMap(item => 
+      Array(item.quantidade).fill(item.id)
+    );
 
     const dadosDoPedido = {
-      mesa: `Mesa ${numeromesa}`, // Podemos deixar fixo por enquanto
-      itens: comanda.map(item => item.id), // Envia só os IDs, como no back-end
+      mesa: `Mesa ${numeromesa}`,
+      itens: itensComQuantidade,
       total: calcularTotalComanda(),
     };
 
     try {
       const response = await createComanda(dadosDoPedido);
       console.log('✅ Pedido enviado com sucesso!', response.data);
-      alert(`✅ Pedido #${response.data.dados.id} esta sendo prepardo`);
+      alert(`✅ Pedido #${response.data.dados.id} esta sendo preparado`);
       setComanda([]); // Limpa o carrinho
-
-      setnumeromesa(numeromesaSoma => numeromesaSoma + 1);
-      
-      // ATUALIZA A LISTA DE PEDIDOS NO PAINEL DA COZINHA
-      setRefreshPedidos(count => count + 1); // Incrementa o gatilho
-      
+      setNumeromesa(numeromesaSoma => numeromesaSoma + 1);
+      setRefreshPedidos(count => count + 1);
     } catch (err) {
       console.error('X Erro ao enviar pedido:', err);
       alert('X Erro ao enviar pedido para a "Cozinha". Tente novamente.');
     }
   };
-
-  // --- Renderização ---
 
   if (loading) {
     return (
@@ -138,7 +168,6 @@ function App() {
     );
   }
 
-  // Se deu tudo certo:
   return (
     <div className="App">
       <h1>🍽️ Cardápio do Restaurante 🍽️</h1>
@@ -182,19 +211,22 @@ function App() {
               <h2>{item.nome}</h2>
               <p className="descricao">{item.descricao}</p>
               <p className="preco">R$ {item.preco.toFixed(2)}</p>
-              {/* Botão para adicionar item à comanda */}
-              <button 
-                onClick={() => handleAddItemComanda(item)} 
-                style={{ color: 'white' }}
-              >
-                ➕ Adicionar ao Pedido
-              </button>
+              
+              {/* Controle de quantidade para cada produto */}
+              <div className="controle-quantidade">
+                <button 
+                  onClick={() => handleAddItemComanda(item)}
+                  className="btn-adicionar-pedido"
+                >
+                  ➕ Adicionar ao Pedido
+                </button>
+              </div>
             </div>
           ))
         )}
       </div>
 
-      {/* PAINEL DA COZINHA - Mostra todos os pedidos feitos */}
+      {/* PAINEL DA COZINHA */}
       <PainelCozinha refreshTrigger={refreshPedidos} />
 
       {/* SEÇÃO DA COMANDA (CARRINHO) */}
@@ -206,9 +238,37 @@ function App() {
           ) : (
             comanda.map((item, index) => (
               <div key={index} className="comanda-item">
-                <span className="comanda-item-nome">{item.nome}</span>
-                <span className="comanda-item-preco">R$ {item.preco.toFixed(2)}</span>
-                <button onClick={() => handleRemoveItemComanda(index)}> X </button>
+                <div className="comanda-item-info">
+                  <span className="comanda-item-nome">{item.nome}</span>
+                  <span className="comanda-item-preco">
+                    R$ {(item.preco * item.quantidade).toFixed(2)}
+                    <span className="preco-unitario"> (R$ {item.preco.toFixed(2)} cada)</span>
+                  </span>
+                </div>
+                
+                {/* Controles de quantidade na comanda */}
+                <div className="controle-quantidade-comanda">
+                  <button 
+                    onClick={() => handleDiminuirQuantidade(index)}
+                    className="btn-quantidade"
+                  >
+                    -
+                  </button>
+                  <span className="quantidade-numero">{item.quantidade}</span>
+                  <button 
+                    onClick={() => handleAumentarQuantidade(index)}
+                    className="btn-quantidade"
+                  >
+                    +
+                  </button>
+                </div>
+                
+                <button 
+                  onClick={() => handleRemoveItemComanda(index)}
+                  className="btn-remover-item"
+                >
+                  X
+                </button>
               </div>
             ))
           )}
