@@ -12,7 +12,6 @@ const pool = mysql.createPool({
     minVersion: 'TLSv1.2',
     rejectUnauthorized: true
   }
-
 });
 
 module.exports = pool;
