@@ -100,6 +100,12 @@ const updateComandaStatus = (req, res) => {
   }
 };
 
+    const [result] = await db.query(
+      'INSERT INTO comandas (mesa, satus, itens, total) VALUES (?, ?, ?, ?)',
+      [mesa, statusbar, itensJSON, total]
+    );
+
+
 // Função para deletar uma comanda (DELETE)
 // Remove um pedido do sistema (ex: cancelamento, limpeza de pedidos antigos)
 const deleteComanda = (req, res) => {
