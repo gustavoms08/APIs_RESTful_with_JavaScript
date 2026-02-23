@@ -1,72 +1,143 @@
-const db = require('../services/database_connection');
+// Controlador de Comandas (Pedidos)
+// Este arquivo é como o "Chef de Pedidos" que recebe e gerencia os pedidos dos clientes
 
-// 1. Buscar todas as comandas
-const getComandas = async (req, res) => {
+const { comandas } = require('../services/database_mock.js');
+
+// Função que retorna todas as comandas (pedidos) registradas
+const getComandas = (req, res) => {
   try {
-    const [rows] = await db.query('SELECT * FROM comandas');
-    
-    // Como os itens e a data estão como TEXT no seu SQL, 
-    // se você salvou como JSON, pode precisar de um JSON.parse() aqui depois.
     res.status(200).json({
       sucesso: true,
-      dados: rows
+      mensagem: 'Comandas recuperadas com sucesso',
+      quantidade: comandas.length,
+      dados: comandas
     });
   } catch (error) {
-    res.status(500).json({ sucesso: false, erro: error.message });
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao buscar comandas',
+      erro: error.message
+    });
   }
 };
 
-// 2. Criar nova comanda (Enviando para o seu SQL)
-const createComanda = async (req, res) => {
+// Função que cria uma nova comanda (pedido)
+// Recebe os dados do pedido do cliente via req.body
+const createComanda = (req, res) => {
   try {
+    // Extrai os dados enviados pelo cliente
     const { mesa, itens, total } = req.body;
 
-    // Convertendo para String para bater com seu tipo TEXT do SQL
-    const itensTexto = JSON.stringify(itens);
-    const dataTexto = new Date().toISOString(); 
-    const statusPadrao = 'pendente';
+    // total = total * 1.10;
 
-    const query = 'INSERT INTO comandas (mesa, itens, total, status, dataPedido) VALUES (?, ?, ?, ?, ?)';
-    const valores = [mesa, itensTexto, total, statusPadrao, dataTexto];
+    // Cria um novo objeto de comanda
+    const novaComanda = {
+      id: comandas.length + 1, // ID automático baseado no tamanho do array
+      mesa,
+      itens,
+      total,
+      status: 'pendente',
+      dataPedido: new Date().toISOString()
+    };
 
-    const [resultado] = await db.query(query, valores);
+    // Adiciona a nova comanda ao array
+    comandas.push(novaComanda);
 
+    // Retorna a comanda criada com status 201 (Created)
     res.status(201).json({
       sucesso: true,
-      id: resultado.insertId,
-      mensagem: "Salvo com sucesso no banco!"
+      mensagem: 'Comanda criada com sucesso',
+      dados: novaComanda
     });
   } catch (error) {
-    res.status(500).json({ sucesso: false, erro: error.message });
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao criar comanda',
+      erro: error.message
+    });
   }
 };
 
-// 3. Atualizar Status
-const updateComandaStatus = async (req, res) => {
+// Função para atualizar o status de uma comanda (PATCH)
+// Permite mudar o status de um pedido (ex: pendente → Em Preparo → Pronto)
+const updateComandaStatus = (req, res) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
+    const { id } = req.params; // Pega o ID da URL
+    const { status } = req.body; // Pega o novo status do corpo da requisição
 
-    await db.query('UPDATE comandas SET status = ? WHERE id = ?', [status, id]);
+    // Validação: verifica se o status foi enviado
+    if (!status) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'Status é obrigatório para atualizar a comanda'
+      });
+    }
 
-    res.status(200).json({ sucesso: true, mensagem: 'Status atualizado' });
+    // Encontra o índice da comanda no array
+    // Usamos == (comparação fraca) para permitir '1' == 1
+    const comandaIndex = comandas.findIndex(c => c.id == id);
+
+    // Se não encontrar (índice -1), retorna 404
+    if (comandaIndex === -1) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Comanda não encontrada.'
+      });
+    }
+
+    // Atualiza o status da comanda encontrada
+    comandas[comandaIndex].status = status;
+
+    // Retorna a comanda inteira atualizada com status 200 (OK)
+    return res.status(200).json(comandas[comandaIndex]);
+
   } catch (error) {
-    res.status(500).json({ sucesso: false, erro: error.message });
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao atualizar comanda',
+      erro: error.message
+    });
   }
 };
 
-// 4. Deletar Comanda
-const deleteComanda = async (req, res) => {
+// Função para deletar uma comanda (DELETE)
+// Remove um pedido do sistema (ex: cancelamento, limpeza de pedidos antigos)
+const deleteComanda = (req, res) => {
   try {
-    const { id } = req.params;
-    await db.query('DELETE FROM comandas WHERE id = ?', [id]);
+    const { id } = req.params; // Pega o ID da URL
 
-    res.status(200).json({ sucesso: true, mensagem: 'Comanda removida' });
+    // Encontra o índice da comanda no array
+    // Usamos == (comparação fraca) para permitir '1' == 1
+    const comandaIndex = comandas.findIndex(c => c.id == id);
+
+    // Se não encontrar (índice -1), retorna 404
+    if (comandaIndex === -1) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Comanda não encontrada.'
+      });
+    }
+
+    // Remove a comanda do array usando splice
+    // splice(índice, quantosRemover) - remove 1 elemento no índice encontrado
+    comandas.splice(comandaIndex, 1);
+
+    // Retorna sucesso com status 200 (OK)
+    return res.status(200).json({
+      sucesso: true,
+      mensagem: 'Comanda deletada com sucesso'
+    });
+
   } catch (error) {
-    res.status(500).json({ sucesso: false, erro: error.message });
+    return res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro ao deletar comanda',
+      erro: error.message
+    });
   }
 };
 
+// Exporta as funções para serem usadas nas rotas
 module.exports = {
   getComandas,
   createComanda,
