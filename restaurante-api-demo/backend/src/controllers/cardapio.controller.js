@@ -49,5 +49,6 @@ const getCardapioItem = (req, res) => {
 
 // Exporta as funções para serem usadas nas rotas
 module.exports = {
-  listarCardapio
+  listarCardapio,
+  getCardapioItem
 };
