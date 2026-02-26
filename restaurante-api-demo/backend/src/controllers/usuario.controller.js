@@ -1,54 +1,28 @@
-const db = require('../services/database_connection');
+const db = require('../config/db'); // Verifique se o caminho para sua conexão com o banco está correto
 
-// 1. Função que retorna TODO o cardápio (Todas as linhas)
-const listarCardapio = async (req, res) => {
-  try {
-    const [rows] = await db.query('SELECT * FROM cardapio');
+const usuarioController = {
+    // Função para listar todos os usuários
+    listarUsuarios: (req, res) => {
+        const query = 'SELECT id, nome, email FROM usuarios'; // Ajuste 'usuarios' para o nome da sua tabela
 
-    res.json({
-      sucesso: true,
-      cardapio: rows
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ sucesso: false, mensagem: 'Erro ao listar cardápio' });
-  }
+        db.query(query, (err, resultados) => {
+            if (err) {
+                console.error('Erro ao buscar usuários:', err);
+                return res.status(500).json({
+                    sucesso: false,
+                    mensagem: 'Erro ao buscar usuários no banco de dados.'
+                });
+            }
+
+            // Retorna os dados no formato que o seu ListaUsuarios.jsx espera
+            return res.status(200).json({
+                sucesso: true,
+                usuarios: resultados
+            });
+        });
+    },
+
+    // Você pode adicionar outras funções aqui (criar, deletar, etc) no futuro
 };
 
-// 2. Função que retorna um ITEM ESPECÍFICO (Filtrando pela coluna ID)
-const getCardapioItem = async (req, res) => {
-  try {
-    const id = req.params.id; // Pega o ID que vem na URL
-
-    // Fazemos a query usando "?" para evitar SQL Injection (segurança)
-    const [rows] = await db.query('SELECT * FROM cardapio WHERE id = ?', [id]);
-
-    // Se o banco não retornar nada para esse ID
-    if (rows.length === 0) {
-      return res.status(404).json({
-        sucesso: false,
-        mensagem: 'Item não encontrado no banco de dados'
-      });
-    }
-
-    // Retorna apenas o primeiro item encontrado (rows[0])
-    res.json({
-      sucesso: true,
-      item: rows[0]
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      sucesso: false,
-      mensagem: 'Erro ao buscar item no banco',
-      erro: error.message
-    });
-  }
-};
-
-// Não esqueça de exportar as DUAS funções!
-module.exports = {
-  listarCardapio,
-  getCardapioItem
-};
+module.exports = usuarioController;

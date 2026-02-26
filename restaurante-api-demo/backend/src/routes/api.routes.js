@@ -29,9 +29,6 @@ router.patch('/comandas/:id', comandasController.updateComandaStatus);
 // DELETE /api/comandas/:id - Deleta uma comanda
 router.delete('/comandas/:id', comandasController.deleteComanda);
 
-router.get('/cardapio/:id', cardapioController.getCardapioItem);
 
-const comandasController = require('../controllers/comandasController'); // Verifique este caminho
 // Exporta o router para ser usado no server.js
-
 module.exports = router;
