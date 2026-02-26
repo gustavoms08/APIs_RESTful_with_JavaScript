@@ -21,12 +21,14 @@ const createComanda = async (req, res) => {
     const { mesa, itens, total } = req.body;
     const statusInicial = 'pendente';
 
+    console.log ("mesaaaaaaaaaaaaaaaaaa", mesa)
+
     // O MySQL não aceita objetos/arrays diretamente, então transformamos em texto (JSON)
     const itensJSON = JSON.stringify(itens);
 
     // O COMANDO QUE VOCÊ PEDIU:
     const [result] = await db.query(
-      'INSERT INTO comandas (mesa, satus, itens, total) VALUES (?, ?, ?, ?)',
+      'INSERT INTO comandas (mesa, status, itens, total) VALUES (?,? ,? , ?)',
       [mesa, statusInicial, itensJSON, total]
     );
 
@@ -52,7 +54,7 @@ const updateComandaStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const [result] = await db.query('UPDATE comandas SET satus = ? WHERE id = ?', [status, id]);
+    const [result] = await db.query('UPDATE comandas SET status = ? WHERE id = ?', [status, id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ sucesso: false, mensagem: 'Comanda não encontrada.' });
